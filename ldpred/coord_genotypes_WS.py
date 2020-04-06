@@ -5,7 +5,7 @@ import h5py
 import sys
 from ldpred import sum_stats_parsers
 from ldpred import reporting
-from ldpred import util ### fixed by Wanson (2020.03.03.)
+from ldpred import util
 from ldpred import plinkfiles
 from plinkio import plinkfile
 import time
@@ -394,38 +394,35 @@ def coordinate_datasets(reference_genotype_file, hdf5_file, summary_dict,
                         num_ambig_nts += 1
                         continue
     
-                    # First check if nucleotide is sane? (### Turned off by Wanson Choi. 2020.03.18.)
-                    # if (not g_nt[0] in util.valid_nts) or (not g_nt[1] in util.valid_nts):
-                    #     num_non_matching_nts += 1
-                    #     continue
-
-                    # Check flip only for the marker whose reverse nucleotide is available. (### WansonChoi. 2020.03.18.)
-                    if (g_nts[g_i][0] in util.opp_strand_dict.keys()) and (g_nts[g_i][1] in util.opp_strand_dict.keys()):
-
-                        os_g_nt = sp.array(
-                            [util.opp_strand_dict[g_nt[0]], util.opp_strand_dict[g_nt[1]]])
-
-                        flip_nts = False
-
-                        #Coordination is a bit more complicate when validation genotypes are provided..
-                        if not(sp.all(g_nt == ss_nt) or sp.all(os_g_nt == ss_nt)):
-                            flip_nts = (g_nt[1] == ss_nt[0] and g_nt[0] == ss_nt[1]) or (
-                                os_g_nt[1] == ss_nt[0] and os_g_nt[0] == ss_nt[1])
-
-                            # Try flipping the SS nt
-                            if flip_nts:
-                                tot_num_flipped_nts +=1
-                                betas[ss_i] = -betas[ss_i]
-                                log_odds[ss_i] = -log_odds[ss_i]
-                                if 'freqs' in ssg and ss_freqs[ss_i]>0:
-                                    ss_freqs[ss_i] = 1.0 - ss_freqs[ss_i]
-                            else:
-                                if debug:
-                                    print("Nucleotides don't match after all?: g_sid=%s, ss_sid=%s, g_i=%d, ss_i=%d, g_nt=%s, ss_nt=%s" % \
-                                          (g_sids[g_i], ss_sids[ss_i], g_i,
-                                           ss_i, str(g_nt), str(ss_nt)))
-                                num_non_matching_nts += 1
-                                continue
+                    # First check if nucleotide is sane?
+                    if (not g_nt[0] in util.valid_nts) or (not g_nt[1] in util.valid_nts):
+                        num_non_matching_nts += 1
+                        continue
+    
+                    os_g_nt = sp.array(
+                        [util.opp_strand_dict[g_nt[0]], util.opp_strand_dict[g_nt[1]]])
+    
+                    flip_nts = False
+                    
+                    #Coordination is a bit more complicate when validation genotypes are provided..
+                    if not(sp.all(g_nt == ss_nt) or sp.all(os_g_nt == ss_nt)):
+                        flip_nts = (g_nt[1] == ss_nt[0] and g_nt[0] == ss_nt[1]) or (
+                            os_g_nt[1] == ss_nt[0] and os_g_nt[0] == ss_nt[1])
+                        
+                        # Try flipping the SS nt
+                        if flip_nts:
+                            tot_num_flipped_nts +=1
+                            betas[ss_i] = -betas[ss_i]
+                            log_odds[ss_i] = -log_odds[ss_i]
+                            if 'freqs' in ssg and ss_freqs[ss_i]>0:
+                                ss_freqs[ss_i] = 1.0 - ss_freqs[ss_i]
+                        else:
+                            if debug:
+                                print("Nucleotides don't match after all?: g_sid=%s, ss_sid=%s, g_i=%d, ss_i=%d, g_nt=%s, ss_nt=%s" % \
+                                      (g_sids[g_i], ss_sids[ss_i], g_i,
+                                       ss_i, str(g_nt), str(ss_nt)))
+                            num_non_matching_nts += 1
+                            continue
                    
                 # everything seems ok.
                 ok_indices['g'].append(g_i)
@@ -607,10 +604,10 @@ def main(p_dict):
     else:
         print('Set of validation SNPs is missing!  Please specify either a validation PLINK genotype file, ' \
               'or a PLINK BIM file with the SNPs of interest.')
-    # if os.path.isfile(p_dict['out']):
-    #     print('Output file (%s) already exists!  Delete, rename it, or use a different output file.'\
-    #           % (p_dict['out']))
-    #     raise Exception('Output file already exists!')
+    if os.path.isfile(p_dict['out']):
+        print('Output file (%s) already exists!  Delete, rename it, or use a different output file.'\
+              % (p_dict['out']))
+        raise Exception('Output file already exists!')
 
     h5f = h5py.File(p_dict['out'], 'w')
     

@@ -93,24 +93,21 @@ def get_prs(genotype_file, rs_id_map, phen_map=None, only_score = False, verbose
             continue
 
         # Check whether the nucleotides are OK, and potentially flip it.
-        # Check flip only for the marker whose reverse nucleotide is available. (### modified by WansonChoi. 2020.03.18.)
         ss_nt = rs_info['nts']
         g_nt = [locus.allele1, locus.allele2]
-
-        if (g_nt[0] in util.opp_strand_dict.keys()) and (g_nt[1] in util.opp_strand_dict.keys()):
-            flip_nts = False
-            os_g_nt = sp.array(
-                [util.opp_strand_dict[g_nt[0]], util.opp_strand_dict[g_nt[1]]])
-            if not (sp.all(g_nt == ss_nt) or sp.all(os_g_nt == ss_nt)):
-                # Opposite strand nucleotides
-                flip_nts = (g_nt[1] == ss_nt[0] and g_nt[0] == ss_nt[1]) or (
-                    os_g_nt[1] == ss_nt[0] and os_g_nt[0] == ss_nt[1])
-                if flip_nts:
-                    upd_pval_beta = -rs_info['upd_pval_beta']
-                    num_flipped_nts += 1
-                else:
-                    num_non_matching_nts += 1
-                    continue
+        flip_nts = False
+        os_g_nt = sp.array(
+            [util.opp_strand_dict[g_nt[0]], util.opp_strand_dict[g_nt[1]]])
+        if not (sp.all(g_nt == ss_nt) or sp.all(os_g_nt == ss_nt)):
+            # Opposite strand nucleotides
+            flip_nts = (g_nt[1] == ss_nt[0] and g_nt[0] == ss_nt[1]) or (
+                os_g_nt[1] == ss_nt[0] and os_g_nt[0] == ss_nt[1])
+            if flip_nts:
+                upd_pval_beta = -rs_info['upd_pval_beta']
+                num_flipped_nts += 1
+            else:
+                num_non_matching_nts += 1
+                continue
         else:
             upd_pval_beta = rs_info['upd_pval_beta']
 
