@@ -14,12 +14,8 @@ std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
 std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
 
 
-# Patterns to use
-p_HLA_marker = re.compile(r'^(AA_|HLA_|SNPS_|INS_)')
 
-
-
-def MHCPred(_train, _validation, _out, _hg):
+def MHCPred(_validation, _out, _hg, _train=None, _train_ss=None):
 
     """
 
@@ -29,34 +25,30 @@ def MHCPred(_train, _validation, _out, _hg):
 
     ## Loading Genotype data
 
-    # contains HLA bmarker?
-    f_bmarker_TRAIN = useBmarker(_train+'.bim')
-    f_bmarker_VAL = useBmarker(_validation+'.bim')
+    # Validation set
+    __VAL__ = s.Study(_validation, _out, _label="raw validation data set").WhetherToHLAStudy(_validation)
 
-    if (not f_bmarker_TRAIN) and (not f_bmarker_VAL):
 
-        # Plain genotype data set without HLA bmarkers.
+    # Training set
+    if bool(_train_ss) and exists(_train_ss):
 
-        __TRAIN__ = s.Study(_train, _out)
-        __VAL__ = s.Study(_validation, _out)
-
-    elif f_bmarker_TRAIN and f_bmarker_VAL:
-
-        # Genotype data set with HLA bmarkers.
-
-        __TRAIN__ = s.HLA_Study(_train, _out)
-        __VAL__ = s.HLA_Study(_validation, _out)
+        __TRAIN__ = s.TRAIN_Study(_out, _ss=_train_ss, _label="TRAIN given as Summary statistics at first by argument.")
 
     else:
-        raise MHCpredError.MHCpredInputPreparationError(
-            std_ERROR_MAIN_PROCESS_NAME +
-            "For TRAIN and VALIDATION data sets, Both of them or Neither of them have HLA binary markers "
-        )
+        __TRAIN__ = s.Study(_train, _out, _label="raw train data set").WhetherToHLAStudy(_train)
+
+        ## ManualCoord
+        MC_toExclude, MC_toExtract = ManualCoord( __VAL__.bim, __TRAIN__.bim, __VAL__.bim, join(dirname(_out), 'ManualCoord'))
+        print(MC_toExclude)
+        print(MC_toExtract)
+
+        __TRAIN__ = __TRAIN__.PLINK_make_bed(join(dirname(_out), basename(_train)+'.MC'), _extract=MC_toExtract, _exclude=MC_toExclude)
+
+        __VAL__ = __VAL__.PLINK_make_bed(join(dirname(_out), basename(_validation)+'.MC'), _a1_allele=__TRAIN__.a1_allele, # set a1 allele to that of TRAIN set.
+                                         _extract=MC_toExtract, _exclude=MC_toExclude)
 
 
-    ## ManualCoord
-
-
+        __TRAIN__ = s.TRAIN_Study(_out, _study=__TRAIN__, _label="raw train data set")
 
 
     ##### < [] LDpred2 > #####
@@ -68,14 +60,6 @@ def MHCPred(_train, _validation, _out, _hg):
 
 
     return 0
-
-
-
-def useBmarker(_bim):
-
-    return pd.read_csv(_bim, sep='\s+', header=None, dtype=str).iloc[:, 1] \
-                .str.match(p_HLA_marker) \
-                .any()
 
 
 
@@ -107,7 +91,9 @@ if __name__ == '__main__':
 
     # parser.add_argument("--use-bmarker", help="\nWhen bmarker is included.\n\n", action="store_true")
 
-    parser.add_argument("--train", help="\nTraining set file prefix.\n\n", required=True)
+    TRAIN = parser.add_mutually_exclusive_group(required=True)
+    TRAIN.add_argument("--train", help="\nTraining set file prefix.\n\n")
+    TRAIN.add_argument("--train-ss", help="\nSummary statistics file of Training set.\n\n")
     parser.add_argument("--val", help="\nValidation set file prefix.\n\n", required=True)
 
 
@@ -134,4 +120,4 @@ if __name__ == '__main__':
     # args = parser.parse_args()
     print(args)
 
-    MHCPred(args.train, args.val, args.out, args.hg)
+    MHCPred(args.val, args.out, args.hg, _train=args.train, _train_ss=args.train_ss)
