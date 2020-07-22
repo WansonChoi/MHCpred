@@ -31,7 +31,7 @@ def ManualCoord(_REFERENCE, _TRAIN, _TEST, _out):
     # Joining 3 tables.
     df_nt_table = REFERENCE_bim.merge(TRAIN_bim, on='Label', suffixes=['_REF', '_TRAIN']) \
                                 .merge(TEST_bim, on='Label')
-    print("df_nt_table:\n{}\n".format(df_nt_table))
+    # print("df_nt_table:\n{}\n".format(df_nt_table))
     
     
     
@@ -258,55 +258,69 @@ def ManualCoord(_REFERENCE, _TRAIN, _TEST, _out):
 
     if len(l_OtherDiscrep) > 0:
         sr_OtherDiscrepency = df_nt_table.iloc[l_OtherDiscrep, 0]
-        print("sr_OtherDiscrepency:\n{}\n".format(sr_OtherDiscrepency.head()))
-        sr_OtherDiscrepency.to_csv(_out+'.OtherDiscrepency.ToExclude.txt', header=False, index=False)
+        # print("sr_OtherDiscrepency:\n{}\n".format(sr_OtherDiscrepency.head()))
+        # sr_OtherDiscrepency.to_csv(_out+'.OtherDiscrepency.ToExclude.txt', header=False, index=False)
     else:
-        print("No other discrepency")
+        # print("No other discrepency")
+        pass
         
     if len(l_ambiguous) > 0:
         sr_Ambiguous = df_nt_table.iloc[l_ambiguous, 0]
-        print("sr_Ambiguous:\n{}\n".format(sr_Ambiguous.head()))
-        sr_Ambiguous.to_csv(_out+'.Ambiguous.ToExclude.txt', header=False, index=False)
+        # print("sr_Ambiguous:\n{}\n".format(sr_Ambiguous.head()))
+        # sr_Ambiguous.to_csv(_out+'.Ambiguous.ToExclude.txt', header=False, index=False)
     else:
-        print("No ambiguous")
-        
+        # print("No ambiguous")
+        pass
+
+
+    # (2020. 07. 22.) in integrating it to MHCpred
+    pd.concat([sr_Ambiguous, sr_OtherDiscrepency], axis=0, ignore_index=True) \
+        .to_csv(_out+'.Ambiguous+OtherDiscrepency.ToExclude.txt', header=False, index=False)
+
+
     if len(l_toFlip_TRAIN) > 0:
         sr_toFlip_TRAIN = df_nt_table.iloc[l_toFlip_TRAIN, 0]
-        print("sr_toFlip_TRAIN:\n{}\n".format(sr_toFlip_TRAIN.head()))
-        sr_toFlip_TRAIN.to_csv(_out+'.TRAIN.ToFLIP.txt', header=False, index=False)
+        # print("sr_toFlip_TRAIN:\n{}\n".format(sr_toFlip_TRAIN.head()))
+        # sr_toFlip_TRAIN.to_csv(_out+'.TRAIN.ToFLIP.txt', header=False, index=False)
     else:
-        print("No toFlip_TRAIN")
+        # print("No toFlip_TRAIN")
+        pass
 
     if len(l_toFlip_TEST) > 0:
         sr_toFlip_TEST = df_nt_table.iloc[l_toFlip_TEST, 0]
-        print("sr_toFlip_TEST:\n{}\n".format(sr_toFlip_TEST.head()))
-        sr_toFlip_TEST.to_csv(_out+'.TEST.ToFLIP.txt', header=False, index=False)
+        # print("sr_toFlip_TEST:\n{}\n".format(sr_toFlip_TEST.head()))
+        # sr_toFlip_TEST.to_csv(_out+'.TEST.ToFLIP.txt', header=False, index=False)
     else:
-        print("No toFlip_TEST")
+        # print("No toFlip_TEST")
+        pass
         
     if len(l_a1_allele_TRAIN) > 0:
         sr_a1_allele_TRAIN = df_nt_table.iloc[l_a1_allele_TRAIN, [0, 1]]
-        print("sr_a1_allele_TRAIN:\n{}\n".format(sr_a1_allele_TRAIN.head()))
-        sr_a1_allele_TRAIN.to_csv(_out+'.TRAIN.a1_allele.txt', sep='\t', header=False, index=False)
+        # print("sr_a1_allele_TRAIN:\n{}\n".format(sr_a1_allele_TRAIN.head()))
+        # sr_a1_allele_TRAIN.to_csv(_out+'.TRAIN.a1_allele.txt', sep='\t', header=False, index=False)
     else:
-        print("No a1_allele_TRAIN")
+        # print("No a1_allele_TRAIN")
+        pass
         
     if len(l_a1_allele_TEST) > 0:
         sr_a1_allele_TEST = df_nt_table.iloc[l_a1_allele_TEST, [0, 1]]
-        print("sr_a1_allele_TEST:\n{}\n".format(sr_a1_allele_TEST.head()))
-        sr_a1_allele_TEST.to_csv(_out+'.TEST.a1_allele.txt', sep='\t', header=False, index=False)
+        # print("sr_a1_allele_TEST:\n{}\n".format(sr_a1_allele_TEST.head()))
+        # sr_a1_allele_TEST.to_csv(_out+'.TEST.a1_allele.txt', sep='\t', header=False, index=False)
     else:
-        print("No a1_allele_TEST")
+        # print("No a1_allele_TEST")
+        pass
         
     if len(l_normal) > 0:
         sr_normal = df_nt_table.iloc[l_normal, 0]
-        print("sr_normal:\n{}\n".format(sr_normal.head()))
+        # print("sr_normal:\n{}\n".format(sr_normal.head()))
         sr_normal.to_csv(_out+'.Normal.ToExtract.txt', header=False, index=False)
     else:
-        print("No sr_normal")
+        # print("No sr_normal")
+        pass
         
     
-    
+
+    return _out+'.Ambiguous+OtherDiscrepency.ToExclude.txt', _out+'.Normal.ToExtract.txt'
     
     
         
