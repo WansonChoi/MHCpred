@@ -22,3 +22,14 @@ class MHCpredInputPreparationError(MHCpredError):
 
     def __init__(self, _message):
         print(_message)
+
+
+
+class MHCpredBashExecutionError(MHCpredError):
+
+    """
+    Error related to preparing input.
+    """
+
+    def __init__(self, _message):
+        print(_message)
