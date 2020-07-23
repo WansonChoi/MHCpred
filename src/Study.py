@@ -6,6 +6,8 @@ import pandas as pd
 
 import src.MHCpredError as MHCpredError
 import src.bashPLINK as bashPLINK
+from src.refineBPofBIM import refineBPofBIM
+from src.GTtrick_bmarker import GTtrick_bmarker
 
 std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
 std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
@@ -212,7 +214,7 @@ class Study(object):
 
         if self.df_bim['Label'].str.match(p_HLA_marker).any():
             print("Converting '{}' to HLA_Study".format(self.label))
-            return HLA_Study(_input, self.out2, self.a1_allele, self.label,
+            return HLA_Study(_input, self.out2, self.label+' (HLA Study)', self.a1_allele,
                              self.pheno, self.pheno_name, self.covar, self.covar_name, self.pcs)
         else:
             return self
@@ -238,12 +240,47 @@ class HLA_Study(Study):
     def __init__(self, _input, _out, _label="", _a1_allele=None,
                  _pheno=None, _pheno_name=None, _covar=None, _covar_name=None, _pcs=None):
 
-        super().__init__(_input, _out, _a1_allele, _pheno, _pheno_name, _covar, _covar_name, _pcs)
-        # Study.__init__(_input, _out, _a1_allele, _pheno, _pheno_name, _covar, _covar_name, _pcs)
+        super().__init__(_input, _out, _label, _a1_allele, _pheno, _pheno_name, _covar, _covar_name, _pcs)
 
         ### Main variables
-        self.label = _label if bool(_label) else basename(_input)  # Override
+
+        # Overriding
+        self.label = _label if bool(_label) else basename(_input)
+        print("bim Before: {}".format(self.bim))
+        self.bim = self.GTtrick(self.refineBP(self.bim))
+        print("bim AFter: {}".format(self.bim))
+        self.a1_allele = self.MakeA1Allele(self.bim)
 
 
 
-    # def refine
+    def refineBP(self, _bim):
+        return refineBPofBIM(_bim, join(dirname(self.out2), basename(_bim)+'.rBP'))
+
+
+
+    def GTtrick(self, _bim):
+        return GTtrick_bmarker(_bim, join(dirname(self.out2), basename(_bim)+'.GTtrick'))
+
+
+
+    def MakeA1Allele(self, _bim):
+
+        t_out = re.sub(r'\.bim', '.a1_allele', _bim)
+
+        pd.read_csv(_bim, sep='\s+', header=None, dtype=str) \
+            .iloc[:, [1,4]] \
+            .to_csv(t_out, sep='\t', header=False, index=False)
+
+        return t_out
+
+
+
+    def PLINK_make_bed(self, _out, _a1_allele=None, _extract=None, _exclude=None, _keep=None, _remove=None, _allow_no_sex=True):
+
+        new_study = bashPLINK.MakeBed(_out, _bed=self.bed, _bim=self.bim, _fam=self.fam,
+                                      _a1_allele=_a1_allele if _a1_allele else self.a1_allele,
+                                      _extract=_extract, _exclude=_exclude, _keep=_keep, _remove=_remove,
+                                      _allow_no_sex=(not self.haveSexInfo))
+        # print(new_study)
+
+        return HLA_Study(new_study, _out)
