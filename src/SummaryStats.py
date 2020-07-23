@@ -7,7 +7,7 @@ import pandas as pd
 import src.MHCpredError as MHCpredError
 import src.bashPLINK as bashPLINK
 from src.MakeSS import MakeSS
-from src.HLAStudy import Study, HLA_Study
+from src.Study import Study, HLA_Study
 
 std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
 std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))

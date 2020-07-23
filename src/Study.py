@@ -6,7 +6,6 @@ import pandas as pd
 
 import src.MHCpredError as MHCpredError
 import src.bashPLINK as bashPLINK
-from src.HLAStudy import HLA_Study
 
 std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
 std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
@@ -178,7 +177,7 @@ class Study(object):
 
     def makeSummary(self):
 
-        str_summary = ["< Genotype data set: {} \n".format(self.label), "- bed : {}\n- bim : {}\n- fam : {}".format(self.bed, self.bim, self.fam)]
+        str_summary = ["< Genotype data set: {} >".format(self.label), "- bed : {}\n- bim : {}\n- fam : {}".format(self.bed, self.bim, self.fam)]
 
         if bool(self.a1_allele):
             str_summary.append("- a1_allele : {}".format(self.a1_allele))
@@ -213,7 +212,7 @@ class Study(object):
 
         if self.df_bim['Label'].str.match(p_HLA_marker).any():
             print("Converting '{}' to HLA_Study".format(self.label))
-            return HLA_Study(_input, self.out2, self.label, self.a1_allele,
+            return HLA_Study(_input, self.out2, self.a1_allele, self.label,
                              self.pheno, self.pheno_name, self.covar, self.covar_name, self.pcs)
         else:
             return self
@@ -226,3 +225,25 @@ class Study(object):
 
 
 
+class HLA_Study(Study):
+
+    """
+
+    - refineBP.py
+    - GTtrick.py
+    - AA | HLA | SNPS | ...
+
+    """
+
+    def __init__(self, _input, _out, _label="", _a1_allele=None,
+                 _pheno=None, _pheno_name=None, _covar=None, _covar_name=None, _pcs=None):
+
+        super().__init__(_input, _out, _a1_allele, _pheno, _pheno_name, _covar, _covar_name, _pcs)
+        # Study.__init__(_input, _out, _a1_allele, _pheno, _pheno_name, _covar, _covar_name, _pcs)
+
+        ### Main variables
+        self.label = _label if bool(_label) else basename(_input)  # Override
+
+
+
+    # def refine
