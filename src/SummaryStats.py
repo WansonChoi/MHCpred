@@ -68,6 +68,18 @@ class SummaryStats(object):
 
 
 
+    def checkSummaryStats(self, _ss):
+
+        # Case 1 : ss
+
+        # Case 2 : PLINK logistic regression (*.assoc.logistic)
+        # - check whether it has 'BETA' column
+
+
+        return 0
+
+
+
     def PLINK_LogisticRegression(self, _out, _a1_allele=None, _extract=None, _exclude=None, _keep=None, _remove=None,
                                  _allow_no_sex=True, _ci=0.95, _pfilter=1):
 
