@@ -3,10 +3,9 @@
 import os, sys, re
 from os.path import exists, dirname, basename, join
 import argparse, textwrap
-import pandas as pd
 
-import src.Study as s
-import src.MHCpredError as MHCpredError
+from src.Study import Study
+from src.SummaryStats import SummaryStats
 from src.ManualCoord import ManualCoord
 
 std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
@@ -15,7 +14,7 @@ std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__
 
 
 
-def MHCPred(_validation, _out, _hg, _train=None, _train_ss=None):
+def MHCPred(_validation, _out, _hg, _train=None, _train_ss=None, _pfilter=(1,)):
 
     """
 
@@ -26,21 +25,27 @@ def MHCPred(_validation, _out, _hg, _train=None, _train_ss=None):
     ## Loading Genotype data
 
     # Validation set
-    __VAL__ = s.Study(_validation, _out, _label="raw validation data set").WhetherToHLAStudy(_validation)
-
+    print(std_MAIN_PROCESS_NAME + "Loading genotype data of 'original Validation set'.")
+    __VAL__ = Study(_validation, _out, _label="original Validation set").WhetherToHLAStudy(_validation)
+    print(__VAL__.getSummary())
 
     # Training set
     if bool(_train_ss) and exists(_train_ss):
 
-        __TRAIN__ = s.TRAIN_Study(_out, _ss=_train_ss, _label="TRAIN given as Summary statistics at first by argument.")
+        # Take the given summary statistics file as it is.
+        __TRAIN__ = SummaryStats(_out, _ss=_train_ss, _label="TRAIN given as Summary statistics at first by argument.")
+
+        # Actually ManualCoord is needed here, too. Realized it later.
 
     else:
-        __TRAIN__ = s.Study(_train, _out, _label="raw train data set").WhetherToHLAStudy(_train)
+        print(std_MAIN_PROCESS_NAME + "Loading genotype data of 'original Training set'.")
+        __TRAIN__ = Study(_train, _out, _label="original Training set").WhetherToHLAStudy(_train)
+        print(__TRAIN__.getSummary())
 
         ## ManualCoord
         MC_toExclude, MC_toExtract = ManualCoord( __VAL__.bim, __TRAIN__.bim, __VAL__.bim, join(dirname(_out), 'ManualCoord'))
-        print(MC_toExclude)
-        print(MC_toExtract)
+        # print(MC_toExclude)
+        # print(MC_toExtract)
 
         __TRAIN__ = __TRAIN__.PLINK_make_bed(join(dirname(_out), basename(_train)+'.MC'), _extract=MC_toExtract, _exclude=MC_toExclude)
 
@@ -48,7 +53,8 @@ def MHCPred(_validation, _out, _hg, _train=None, _train_ss=None):
                                          _extract=MC_toExtract, _exclude=MC_toExclude)
 
 
-        __TRAIN__ = s.TRAIN_Study(_out, _study=__TRAIN__, _label="raw train data set")
+        __TRAIN__ = SummaryStats(_out, _study=__TRAIN__, _pval=_pfilter)
+
 
 
     ##### < [] LDpred2 > #####
@@ -89,23 +95,28 @@ if __name__ == '__main__':
     parser.add_argument("--out", help="\nOutput file name prefix\n\n", required=True)
     parser.add_argument("--hg", help="\nHuman Genome version(ex. 18, 19, 38)\n\n", choices=["18", "19", "38"], required=True)
 
-    # parser.add_argument("--use-bmarker", help="\nWhen bmarker is included.\n\n", action="store_true")
-
+    # Train set
     TRAIN = parser.add_mutually_exclusive_group(required=True)
     TRAIN.add_argument("--train", help="\nTraining set file prefix.\n\n")
     TRAIN.add_argument("--train-ss", help="\nSummary statistics file of Training set.\n\n")
+    parser.add_argument("--pfilter", help="\nP-value to threshold on summary stats.\n\n", nargs='+', default=(1,))
+
+    # Validation set
     parser.add_argument("--val", help="\nValidation set file prefix.\n\n", required=True)
-
-
 
 
 
     ##### < for Testing > #####
 
-    args = parser.parse_args('--out tests/test3/test3 '
-                             '--hg 19 '
-                             '--train tests/example/RA/TRAIN.RA+58C+NBS.06.hg19.27892021-34892022 '
-                             '--val tests/example/RA/VALIDATION.RA+58C+NBS.06.hg19.27892021-34892022'.split(' '))
+    # args = parser.parse_args('--out tests/test4_RA_Plain/test3 '
+    #                          '--hg 19 '
+    #                          '--train tests/example/RA/TRAIN.RA+58C+NBS.06.hg19.27892021-34892022 '
+    #                          '--val tests/example/RA/VALIDATION.RA+58C+NBS.06.hg19.27892021-34892022'.split(' '))
+
+    # args = parser.parse_args('--out tests/test3/test3 '
+    #                          '--hg 19 '
+    #                          '--train tests/example/RA/TRAIN.RA+58C+NBS.06.hg19.27892021-34892022.bmarker '
+    #                          '--val tests/example/RA/VALIDATION.RA+58C+NBS.06.hg19.27892021-34892022.bmarker'.split(' '))
 
     # args = parser.parse_args('--out tests/test2/test2 '
     #                          '--hg 19 '
@@ -117,7 +128,7 @@ if __name__ == '__main__':
 
 
     ##### < for Publish > #####
-    # args = parser.parse_args()
+    args = parser.parse_args()
     print(args)
 
-    MHCPred(args.val, args.out, args.hg, _train=args.train, _train_ss=args.train_ss)
+    MHCPred(args.val, args.out, args.hg, _train=args.train, _train_ss=args.train_ss, _pfilter=args.pfilter)

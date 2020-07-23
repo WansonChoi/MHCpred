@@ -50,7 +50,7 @@ class Study(object):
 
         # Printing summary
         self.str_summary = self.makeSummary()
-        print('\n{}'.format(self.getSummary()))
+        # print('\n{}'.format(self.getSummary()))
 
 
 
@@ -213,7 +213,7 @@ class Study(object):
     def WhetherToHLAStudy(self, _input):
 
         if self.df_bim['Label'].str.match(p_HLA_marker).any():
-            print("Converting '{}' to HLA_Study".format(self.label))
+            print("Converting '{}' to 'HLA_Study' object.".format(self.label))
             return HLA_Study(_input, self.out2, self.label+' (HLA Study)', self.a1_allele,
                              self.pheno, self.pheno_name, self.covar, self.covar_name, self.pcs)
         else:
@@ -223,7 +223,8 @@ class Study(object):
 
     def __del__(self):
 
-        print("Study object for '{}' has been deleted.".format(self.label))
+        # print("Study object for '{}' has been deleted.".format(self.label))
+        pass
 
 
 
@@ -246,10 +247,12 @@ class HLA_Study(Study):
 
         # Overriding
         self.label = _label if bool(_label) else basename(_input)
-        print("bim Before: {}".format(self.bim))
+        # print("bim Before: {}".format(self.bim))
         self.bim = self.GTtrick(self.refineBP(self.bim))
-        print("bim AFter: {}".format(self.bim))
+        # print("bim AFter: {}".format(self.bim))
         self.a1_allele = self.MakeA1Allele(self.bim)
+
+        self.str_summary = self.addSummary()
 
 
 
@@ -284,3 +287,16 @@ class HLA_Study(Study):
         # print(new_study)
 
         return HLA_Study(new_study, _out)
+
+
+
+    def addSummary(self):
+
+        str_summary = []
+
+        str_summary.append('- bim(refinedBP, GTtrick) : {}'.format(self.bim))
+        str_summary.append('- a1_allele(refinedBP, GTtrick) : {}'.format(self.a1_allele))
+
+        self.str_summary.extend(str_summary)
+
+        return self.str_summary
