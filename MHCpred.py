@@ -99,7 +99,7 @@ if __name__ == '__main__':
     TRAIN = parser.add_mutually_exclusive_group(required=True)
     TRAIN.add_argument("--train", help="\nTraining set file prefix.\n\n")
     TRAIN.add_argument("--train-ss", help="\nSummary statistics file of Training set.\n\n")
-    parser.add_argument("--pfilter", help="\nP-value to threshold on summary stats.\n\n", nargs='+', default=(1,))
+    parser.add_argument("--train-pfilter", help="\nP-value to threshold summary stats.\n\n", nargs='+', default=(1,), type=float)
 
     # Validation set
     parser.add_argument("--val", help="\nValidation set file prefix.\n\n", required=True)
